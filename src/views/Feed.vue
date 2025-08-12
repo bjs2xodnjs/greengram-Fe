@@ -81,8 +81,8 @@ const saveFeed = async () => {
     }
 
     const params = {
-        contents: state.feed.contents,
-        location: state.feed.location
+        contents: state.feed.contents.length === 0 ? null : state.feed.contents,
+        location: state.feed.location.length === 0 ? null : state.feed.location
     }
 
     const formData = new FormData();
@@ -142,7 +142,7 @@ const handleScroll = () => {
                 <div class="modal-body" id="id-modal-body">                            
                     <div>location: <input type="text" name="location" placeholder="위치" v-model="state.feed.location"/></div>
                     <div>contents: <textarea name="contents" placeholder="내용" v-model="state.feed.contents"></textarea></div>
-                    <div><label>pic: <input name="pics" type="file" multiple accept="image/*" @change="handlePicChanged"/></label></div>
+                    <div><label>pic: <input name="pics" type="file" multiple accept="image/*" @change="handlePicChanged" required/></label></div>
                     <div><button @click="saveFeed">전송</button></div>
                 </div>
             </div>
