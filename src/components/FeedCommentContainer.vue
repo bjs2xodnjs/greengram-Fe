@@ -37,6 +37,10 @@ const state = reactive({
     // ]
 });
 
+const data = {
+    rowPerPage: 31, 
+}
+
 //댓글 등록
 const onPostComment = async () => {
     if(state.comment.trim().length === 0) {
@@ -58,36 +62,42 @@ const onPostComment = async () => {
             writerUserId: authenticationStore.state.signedUser.userId,
             writerNm: authenticationStore.state.signedUser.nickName,
             writerPic: authenticationStore.state.signedUser.pic,
-            comment: state.comment
+            comment: state.comment,
+            isSelf: true
         }
 
-        state.commentList.unshift(commentItem);
-
+        state.commentList.push(commentItem);
         state.comment = '';
     }
 }
 
 const getMoreComment = async () => {
+    //기존 자체 생성한 댓글은 삭제처리 
+    const commentList = state.commentList.filter(item => item.isSelf === undefined);
+    state.commentList = commentList;
+
     console.log('getMoreComment clicked');
     state.isLoading = true;
     const params = { 
         feed_id: props.feedId,
-        start_idx: state.commentList.length
+        start_idx: state.commentList.length,
+        size: data.rowPerPage
     }
     const res = await getCommentList(params)
     if(res.status === 200) {
-        const moreCommentList = res.data.result;
-        if(moreCommentList.length > 0) {
-            state.commentList = [...state.commentList, ...moreCommentList]
+        const result = res.data.result;
+        state.moreComment = result.moreComment;
+        if(result.commentList.length > 0) {
+            state.commentList.push(...result.commentList)
         }
     }
     state.isLoading = false;
 }
 
 //댓글 삭제
-const onDeleteComment = async (feedCommentId, idx) => {
+const onDeleteComment = async (feedCommentid, idx) => {
     console.log('onDeleteComment');
-    console.log('feedCoomentId: ', feedCommentId);
+    console.log('feedCommentid: ', feedCommentid);
     console.log('idx: ', idx);
     
     if(!confirm('댓글을 삭제하시겠습니까?')) { return; }
@@ -103,7 +113,7 @@ const onDeleteComment = async (feedCommentId, idx) => {
 
 <template>
 <div>
-    <div class="overflow-y-auto max-height-240">
+    <div class="overflow-y-auto max-height-240 mt-3 mb-3">
         <div v-if="state.isLoading">Loading...</div>
         <feed-comment-card v-for="(item, idx) in state.commentList" :key="item.feedCommentId" :item="item" @on-delete-comment="onDeleteComment(item.feedCommentId, idx)"/>
         <div v-if="state.moreComment" class="mt-3 mb-3">
